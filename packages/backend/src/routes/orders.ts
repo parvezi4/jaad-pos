@@ -88,7 +88,7 @@ router.post('/', async (req: Request, res: Response) => {
     // Emit to POS clients in the restaurant's room
     const orderPayload: Order = {
       id: order.id,
-      status: order.status as any,
+      status: order.status as OrderStatus,
       totalAmount: Number(order.totalAmount),
       customerName: order.customerName,
       paymentMethod: order.paymentMethod,
