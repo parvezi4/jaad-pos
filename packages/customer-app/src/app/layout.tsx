@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '../context/CartContext';
@@ -9,8 +9,13 @@ export const metadata: Metadata = {
   title: 'Jaad POS - Order App',
   description: 'Order food at your table',
   manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
   themeColor: '#2563eb',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
