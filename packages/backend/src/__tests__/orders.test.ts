@@ -89,6 +89,35 @@ describe('POST /api/orders', () => {
     expect(res.body.items).toHaveLength(1);
   });
 
+  it('should accept table QR code and store internal table id', async () => {
+    (prisma.table.findFirst as jest.Mock).mockResolvedValue(mockTable);
+    (prisma.menuItem.findMany as jest.Mock).mockResolvedValue([mockMenuItem]);
+    (prisma.order.create as jest.Mock).mockResolvedValue(mockOrder);
+
+    const res = await request(app).post('/api/orders').send({
+      tableId: 'JAAD-T1',
+      restaurantId: 'restaurant-1',
+      paymentMethod: 'QRIS',
+      items: [{ menuItemId: 'item-1', quantity: 1 }],
+    });
+
+    expect(res.status).toBe(201);
+    expect(prisma.table.findFirst).toHaveBeenCalledWith({
+      where: {
+        restaurantId: 'restaurant-1',
+        OR: [{ id: 'JAAD-T1' }, { qrCode: 'JAAD-T1' }],
+      },
+    });
+    expect(prisma.order.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          tableId: 'table-1',
+          restaurantId: 'restaurant-1',
+        }),
+      }),
+    );
+  });
+
   it('should return 400 for invalid request body', async () => {
     const res = await request(app).post('/api/orders').send({ tableId: 'bad' });
 

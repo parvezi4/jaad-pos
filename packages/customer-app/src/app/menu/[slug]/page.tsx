@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { fetchMenuBySlug } from '../../../lib/api';
 import { useCart } from '../../../context/CartContext';
 import Link from 'next/link';
@@ -33,20 +33,28 @@ function formatPrice(price: number): string {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
 }
 
-export default function MenuPage({ params }: { params: { slug: string } }) {
+export default function MenuPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { addItem, itemCount, totalAmount } = useCart();
+  const params = useParams<{ slug: string }>();
+  const slug = typeof params.slug === 'string' ? params.slug : '';
   const searchParams = useSearchParams();
   const tableQr = searchParams.get('table');
 
   useEffect(() => {
-    fetchMenuBySlug(params.slug)
+    if (!slug) {
+      setError('Menu not found');
+      setLoading(false);
+      return;
+    }
+
+    fetchMenuBySlug(slug)
       .then(setRestaurant)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [params.slug]);
+  }, [slug]);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center" role="status" aria-live="polite" aria-label="Loading menu">

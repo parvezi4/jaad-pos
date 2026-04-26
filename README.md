@@ -1,17 +1,17 @@
-# Jaad POS — Restaurant Management MVP
+# Jaad POS - Restaurant Management MVP
 
-A full-stack QR-code-to-POS restaurant management system built for high-volume cafes and smokehouses.
+A full-stack QR-code-to-POS restaurant management system.
 
-## Architecture
+## Monorepo Structure
 
-```
+~~~text
 jaad-pos/
-├── packages/
-│   ├── shared/         # Shared TypeScript interfaces & constants
-│   ├── backend/        # Express + Prisma + Socket.io API server
-│   ├── customer-app/   # Next.js 14 PWA (customer ordering)
-│   └── pos-app/        # React Native (cashier POS tablet)
-```
+|- packages/
+|  |- shared/         Shared TypeScript interfaces and constants
+|  |- backend/        Express + Prisma + Socket.io API server
+|  |- customer-app/   Next.js customer ordering app
+|  |- pos-app/        React Native cashier POS app
+~~~
 
 ## Tech Stack
 
@@ -20,79 +20,164 @@ jaad-pos/
 | Backend API | Node.js + Express + TypeScript |
 | Database | PostgreSQL via Prisma ORM |
 | Real-Time | Socket.io |
-| Customer App | Next.js 14 (React) + Tailwind CSS (PWA) |
-| POS App | React Native + TypeScript (Android) |
-| Printing | ESC/POS protocol (mock) |
-| Payment | QRIS / OVO simulation |
-| Testing | Playwright (web E2E) + Jest (unit) |
+| Customer App | Next.js + React + Tailwind CSS |
+| POS App | React Native + TypeScript |
+| Testing | Playwright (web E2E) + Jest |
 
-## Getting Started
+## Local Setup
 
 ### Prerequisites
+
 - Node.js 18+
-- PostgreSQL database
+- npm 9+
+- PostgreSQL (local) or Supabase Postgres
 
 ### 1. Install dependencies
-```bash
-npm install
-```
 
-### 2. Configure backend
-```bash
-cp packages/backend/.env.example packages/backend/.env
-# Edit DATABASE_URL in packages/backend/.env
-```
+~~~bash
+npm install
+~~~
+
+### 2. Configure backend environment
+
+Create packages/backend/.env from packages/backend/.env.example.
+
+Required variables:
+
+- DATABASE_URL
+- PORT (default: 4000)
+- CLIENT_URL (default: http://localhost:3000)
+
+Optional variable:
+
+- CORS_ORIGINS (comma-separated extra origins)
+
+Example:
+
+~~~env
+DATABASE_URL="postgresql://user:password@localhost:5432/jaad_pos?schema=public"
+PORT=4000
+CLIENT_URL="http://localhost:3000"
+CORS_ORIGINS="http://127.0.0.1:3000"
+~~~
 
 ### 3. Initialize database
-```bash
-cd packages/backend
-npm run db:generate
-npm run db:migrate
-npm run db:seed
-```
 
-### 4. Start development servers
-```bash
-# Backend
+From repo root:
+
+~~~bash
+npm run db:generate --workspace=packages/backend
+npm run db:migrate --workspace=packages/backend
+npm run db:seed --workspace=packages/backend
+~~~
+
+### 4. Run apps
+
+In separate terminals:
+
+~~~bash
+# Terminal 1 (backend API)
 npm run dev:backend
 
-# Customer App
+# Terminal 2 (customer app)
 npm run dev:customer
-```
+~~~
 
-### 5. Run tests
-```bash
+Notes:
+
+- dev:backend builds packages/shared first, then starts backend.
+- Backend runs on http://localhost:4000
+- Customer app runs on http://localhost:3000
+
+### 5. Quick verification
+
+Open these URLs:
+
+- Customer UI: http://localhost:3000
+- Backend root info: http://localhost:4000
+- Health check: http://localhost:4000/health
+- Demo menu endpoint: http://localhost:4000/api/menu/slug/jaad-cafe
+
+## Common Commands
+
+### Build
+
+~~~bash
+npm run build:shared
+npm run build:backend
+npm run build:customer
+~~~
+
+### Tests
+
+~~~bash
 # Backend unit tests
 npm run test:backend
 
-# Playwright E2E tests (requires running dev server)
+# Customer E2E tests
 npm run test:e2e
-```
+
+# POS unit tests
+npm run test --workspace=packages/pos-app
+~~~
+
+### Lint (customer app)
+
+~~~bash
+npm run lint --workspace=packages/customer-app
+~~~
 
 ## API Reference
 
 ### Menu
-- `GET /api/menu/:restaurantId` — Get full menu by restaurant ID
-- `GET /api/menu/slug/:slug` — Get full menu by restaurant slug
+
+- GET /api/menu/:restaurantId - Get full menu by restaurant ID
+- GET /api/menu/slug/:slug - Get full menu by restaurant slug
 
 ### Orders
-- `POST /api/orders` — Create a new order (emits Socket.io event to POS)
-- `GET /api/orders/:orderId` — Get order details
-- `PATCH /api/orders/:orderId/status` — Update order status
+
+- POST /api/orders - Create a new order (emits Socket.io event to POS)
+- GET /api/orders/:orderId - Get order details
+- PATCH /api/orders/:orderId/status - Update order status
 
 ## Socket.io Events
 
 | Event | Direction | Payload |
 |---|---|---|
-| `join_restaurant` | Client → Server | `restaurantId: string` |
-| `new_order` | Server → POS | `Order` object |
-| `order_updated` | Server → POS | `Order` object |
+| join_restaurant | Client to Server | restaurantId: string |
+| new_order | Server to POS | Order object |
+| order_updated | Server to POS | Order object |
 
-## QR Code Workflow
+## Troubleshooting
 
-1. Customer scans QR at table → opens `customer-app`
-2. Customer browses menu, adds items to cart
-3. Customer simulates QRIS/OVO payment → order submitted via `POST /api/orders`
-4. Backend stores order in PostgreSQL, emits `new_order` via Socket.io
-5. POS tablet receives real-time notification, shows order card
-6. Cashier presses "Print" → ESC/POS payload generated & sent to thermal printer
+### Backend shows Not found at /
+
+Backend is API-only. The root URL returns JSON metadata, not a web UI. Use http://localhost:3000 for the customer interface.
+
+### CORS errors from customer app
+
+- Confirm backend .env has CLIENT_URL set to your frontend origin.
+- Add extra origins in CORS_ORIGINS if needed.
+- Restart backend after env changes.
+
+### Table not found for this restaurant during checkout
+
+- Re-run seed command:
+
+~~~bash
+npm run db:seed --workspace=packages/backend
+~~~
+
+- Ensure checkout URL includes table and restaurant query parameters.
+
+### Port already in use (EADDRINUSE)
+
+Stop the process already using the port, or set a different PORT in packages/backend/.env.
+
+## QR Workflow
+
+1. Customer scans QR at table and opens customer app
+2. Customer browses menu and adds items to cart
+3. Customer confirms payment in checkout
+4. Backend stores order and emits new_order via Socket.io
+5. POS receives the real-time order event

@@ -9,7 +9,8 @@
     "postcss": "^8.5.12"
   },
   "scripts": {
-    "dev:backend": "npm run dev --workspace=packages/backend",
+    "build:shared": "npm run build --workspace=packages/shared",
+    "dev:backend": "npm run build:shared && npm run dev --workspace=packages/backend",
     "dev:customer": "npm run dev --workspace=packages/customer-app",
     "build:backend": "npm run build --workspace=packages/backend",
     "build:customer": "npm run build --workspace=packages/customer-app",

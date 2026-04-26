@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import type { CartItem } from '../lib/cart';
 
 interface CartState {
@@ -59,7 +60,7 @@ interface CartContextValue extends CartState {
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { items: [] });
 
   const addItem = useCallback((item: CartItem) => dispatch({ type: 'ADD_ITEM', payload: item }), []);

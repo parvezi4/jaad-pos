@@ -33,7 +33,10 @@ router.post('/', async (req: Request, res: Response) => {
 
     // Verify table belongs to restaurant
     const table = await prisma.table.findFirst({
-      where: { id: tableId, restaurantId },
+      where: {
+        restaurantId,
+        OR: [{ id: tableId }, { qrCode: tableId }],
+      },
     });
     if (!table) {
       return res.status(404).json({ error: 'Table not found for this restaurant' });
@@ -61,7 +64,7 @@ router.post('/', async (req: Request, res: Response) => {
     // Create order with items
     const order = await prisma.order.create({
       data: {
-        tableId,
+        tableId: table.id,
         restaurantId,
         customerName,
         paymentMethod,
