@@ -50,7 +50,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center" role="status" aria-live="polite" aria-label="Loading menu">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" aria-label="Loading" />
     </div>
   );
 
