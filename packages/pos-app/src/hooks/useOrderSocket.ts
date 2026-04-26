@@ -1,13 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { SOCKET_EVENTS } from '@jaad-pos/shared';
 import { Order } from '../types';
 
 const SOCKET_URL = process.env.SOCKET_URL || 'http://localhost:4000';
-
-const SOCKET_EVENTS = {
-  NEW_ORDER: 'new_order',
-  JOIN_RESTAURANT: 'join_restaurant',
-} as const;
 
 export function useOrderSocket(restaurantId: string) {
   const [orders, setOrders] = useState<Order[]>([]);

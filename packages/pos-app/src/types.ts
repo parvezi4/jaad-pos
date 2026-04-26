@@ -1,8 +1,6 @@
-export enum OrderStatus {
-  PENDING = 'PENDING',
-  PAID = 'PAID',
-  PRINTED = 'PRINTED',
-}
+import { OrderStatus } from '@jaad-pos/shared';
+
+export { OrderStatus };
 
 export interface MenuItem {
   id: string;

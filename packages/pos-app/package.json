@@ -9,6 +9,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@jaad-pos/shared": "*",
     "react": "18.2.0",
     "react-native": "0.73.2",
     "socket.io-client": "^4.6.2"
