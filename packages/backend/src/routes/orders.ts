@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { emitNewOrder } from '../lib/socket';
+import { OrderStatus } from '@jaad-pos/shared';
 import type { Order } from '@jaad-pos/shared';
 
 const router = Router();
@@ -169,7 +170,7 @@ router.patch('/:orderId/status', async (req: Request, res: Response) => {
     const { orderId } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['PENDING', 'PAID', 'PRINTED'];
+    const validStatuses = Object.values(OrderStatus);
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }

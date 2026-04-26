@@ -20,6 +20,15 @@ export default function CheckoutPage() {
   const tableId = searchParams.get('table') ?? '';
   const restaurantId = searchParams.get('restaurant') ?? '';
 
+  if (!tableId || !restaurantId) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 gap-4">
+        <p className="text-red-500 text-lg">Invalid checkout link. Table or restaurant info is missing.</p>
+        <Link href="/" className="text-blue-600 underline">Go Home</Link>
+      </div>
+    );
+  }
+
   const [step, setStep] = useState<CheckoutStep>('review');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('QRIS');
   const [customerName, setCustomerName] = useState('');

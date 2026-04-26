@@ -7,12 +7,12 @@ interface OrderCardProps {
   onPrint: (order: Order) => void;
 }
 
-function getWaitColor(createdAt: string): string {
+function getWaitColors(createdAt: string): { border: string; badgeBg: string; text: string } {
   const waitMs = Date.now() - new Date(createdAt).getTime();
   const waitMin = waitMs / 60000;
-  if (waitMin < 5) return '#22c55e'; // green - fresh
-  if (waitMin < 10) return '#f59e0b'; // amber - moderate
-  return '#ef4444'; // red - urgent
+  if (waitMin < 5) return { border: '#22c55e', badgeBg: '#dcfce7', text: '#15803d' };
+  if (waitMin < 10) return { border: '#f59e0b', badgeBg: '#fef3c7', text: '#b45309' };
+  return { border: '#ef4444', badgeBg: '#fee2e2', text: '#b91c1c' };
 }
 
 function formatPrice(amount: number): string {
@@ -24,10 +24,10 @@ function formatTime(dateStr: string): string {
 }
 
 export const OrderCard: React.FC<OrderCardProps> = ({ order, onPrint }) => {
-  const waitColor = useMemo(() => getWaitColor(order.createdAt), [order.createdAt]);
+  const waitColors = useMemo(() => getWaitColors(order.createdAt), [order.createdAt]);
 
   return (
-    <View style={[styles.card, { borderLeftColor: waitColor }]}>
+    <View style={[styles.card, { borderLeftColor: waitColors.border }]}>
       <View style={styles.header}>
         <View>
           <Text style={styles.orderId}>#{order.id.slice(-8).toUpperCase()}</Text>
@@ -38,8 +38,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onPrint }) => {
             <Text style={styles.customerName}>{order.customerName}</Text>
           ) : null}
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: waitColor + '20' }]}>
-          <Text style={[styles.statusText, { color: waitColor }]}>{order.status}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: waitColors.badgeBg }]}>
+          <Text style={[styles.statusText, { color: waitColors.text }]}>{order.status}</Text>
         </View>
       </View>
 
