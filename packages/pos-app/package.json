@@ -10,20 +10,22 @@
   },
   "dependencies": {
     "@jaad-pos/shared": "*",
-    "react": "18.2.0",
-    "react-native": "0.73.2",
+    "react": "19.2.3",
+    "react-native": "0.85.2",
     "socket.io-client": "^4.6.2"
   },
   "devDependencies": {
+    "@react-native-community/cli": "latest",
+    "@react-native/metro-config": "0.85.2",
     "@babel/core": "^7.23.7",
     "@babel/preset-env": "^7.23.7",
     "@babel/preset-react": "^7.23.3",
     "@babel/preset-typescript": "^7.23.3",
-    "@types/react": "^18.2.47",
+    "@types/react": "^19.2.3",
     "babel-jest": "^29.7.0",
     "jest": "^29.7.0",
     "metro-react-native-babel-preset": "^0.77.0",
-    "react-test-renderer": "18.2.0",
+    "react-test-renderer": "19.2.3",
     "typescript": "^5.3.3"
   },
   "jest": {
