@@ -69,10 +69,12 @@ jobs:
             node_modules
             packages/customer-app/node_modules
           key: ${{ runner.os }}-node20-e2e-node-modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node20-e2e-node-modules-
 
       - name: Install dependencies
         if: steps.e2e-node-modules-cache.outputs.cache-hit != 'true'
-        run: npm ci --prefer-offline --no-audit --no-fund
+        run: npm ci --workspace=packages/customer-app --include-workspace-root=false --prefer-offline --no-audit --no-fund
 
       - name: Cache Playwright browsers
         id: playwright-cache
