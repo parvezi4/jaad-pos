@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { Platform } from 'react-native';
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_EVENTS } from '@jaad-pos/shared';
 import { Order } from '../types';
 
-const SOCKET_URL = process.env.SOCKET_URL || 'http://localhost:4000';
+function getDefaultSocketUrl() {
+  return Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://localhost:4000';
+}
 
-export function useOrderSocket(restaurantId: string) {
+const SOCKET_URL = process.env.SOCKET_URL || getDefaultSocketUrl();
+
+export function useOrderSocket(restaurantId: string | null) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [connected, setConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
@@ -19,7 +24,18 @@ export function useOrderSocket(restaurantId: string) {
   }, []);
 
   useEffect(() => {
-    const socket = io(SOCKET_URL, { transports: ['websocket'] });
+    if (!restaurantId) {
+      setConnected(false);
+      return;
+    }
+
+    console.log('[POS] Connecting socket to', SOCKET_URL);
+    const socket = io(SOCKET_URL, {
+      timeout: 10000,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -31,6 +47,11 @@ export function useOrderSocket(restaurantId: string) {
     socket.on('disconnect', () => {
       setConnected(false);
       console.log('[POS] Disconnected from server');
+    });
+
+    socket.on('connect_error', (error) => {
+      setConnected(false);
+      console.log('[POS] Socket connect error:', error.message, 'url:', SOCKET_URL);
     });
 
     socket.on(SOCKET_EVENTS.NEW_ORDER, (order: Order) => {
