@@ -156,6 +156,15 @@ npm run start --workspace=packages/pos-app  # Terminal 1: Metro bundler
 npm run lint --workspace=packages/customer-app
 ~~~
 
+## Known Security Advisory
+
+- `npm audit` currently reports a moderate advisory for `postcss <8.5.10` through Next.js's nested dependency tree.
+- The app-level `postcss` dependency is already on a patched version, but `next@15.5.15` still installs its own nested `postcss@8.4.31`.
+- This is currently tracked in GitHub issue `#11`.
+- Do not run `npm audit fix --force` for this advisory. npm suggests downgrading Next.js to `9.3.3`, which is not a safe or valid remediation path for this project.
+- Current guidance: treat this as an accepted temporary risk, monitor Next.js releases, and re-run `npm audit`, `npm outdated next`, and `npm ls postcss --workspace=packages/customer-app` when evaluating upgrades.
+- In CI or local checks, prefer `npm audit --audit-level=high` so only high/critical issues fail the build.
+
 ## API Reference
 
 ### Menu
