@@ -8,7 +8,14 @@ function getDefaultSocketUrl() {
   return Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://localhost:4000';
 }
 
-const SOCKET_URL = process.env.SOCKET_URL || getDefaultSocketUrl();
+// EXPO_PUBLIC_SOCKET_URL is used when running via Expo (Expo Go / EAS builds).
+// SOCKET_URL is the bare RN CLI fallback. On physical iOS devices neither localhost
+// nor 10.0.2.2 will reach your dev machine — set EXPO_PUBLIC_SOCKET_URL to your
+// LAN IP (e.g. http://192.168.1.x:4000) in packages/pos-app/.env
+const SOCKET_URL =
+  process.env.EXPO_PUBLIC_SOCKET_URL ||
+  process.env.SOCKET_URL ||
+  getDefaultSocketUrl();
 
 export function useOrderSocket(restaurantId: string | null) {
   const [orders, setOrders] = useState<Order[]>([]);

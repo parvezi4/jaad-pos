@@ -12,9 +12,15 @@
     "build:shared": "npm run build --workspace=packages/shared",
     "dev:backend": "npm run build:shared && npm run dev --workspace=packages/backend",
     "dev:customer": "npm run dev --workspace=packages/customer-app",
+    "start:customer": "npm run start --workspace=packages/customer-app -- --port 3000",
+    "serve:customer": "npm run build:customer && npm run start:customer",
+    "dev:pos-ios": "npm run expo:start --workspace=packages/pos-app",
     "build:backend": "npm run build --workspace=packages/backend",
     "build:customer": "npm run build --workspace=packages/customer-app",
     "test:backend": "npm run test --workspace=packages/backend",
     "test:e2e": "npm run test:e2e --workspace=packages/customer-app"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1"
   }
 }

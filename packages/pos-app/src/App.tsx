@@ -16,15 +16,20 @@ import { generateEscPosTicket } from './utils/escpos';
 import { Order } from './types';
 
 function getDefaultApiUrl(): string {
-  return process.env.SOCKET_URL
-    ? process.env.SOCKET_URL
-    : Platform.OS === 'android'
-      ? 'http://10.0.2.2:4000'
-      : 'http://localhost:4000';
+  if (Platform.OS === 'android') return 'http://10.0.2.2:4000';
+  // On a physical iOS device localhost won't work — set EXPO_PUBLIC_API_URL.
+  return 'http://localhost:4000';
 }
 
-const RESTAURANT_SLUG = process.env.RESTAURANT_SLUG || 'jaad-cafe';
-const API_URL = process.env.API_URL || getDefaultApiUrl();
+// EXPO_PUBLIC_* vars are picked up from packages/pos-app/.env when using Expo.
+const RESTAURANT_SLUG =
+  process.env.EXPO_PUBLIC_RESTAURANT_SLUG ||
+  process.env.RESTAURANT_SLUG ||
+  'jaad-cafe';
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  process.env.API_URL ||
+  getDefaultApiUrl();
 
 interface RestaurantLookupResponse {
   id: string;
