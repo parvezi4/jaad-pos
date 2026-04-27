@@ -89,7 +89,33 @@ Notes:
 - Backend runs on http://localhost:4000
 - Customer app runs on http://localhost:3000
 
-### 5. Quick verification
+### 5. Run POS Metro Interface (Bootstrap)
+
+**Status:**
+- Metro bundler is configured and can run.
+- Native Android project scaffold is not yet included in this repo.
+- Tracking issue: #8 (Scaffold native Android project for POS app)
+
+**Steps:**
+
+1. Start Metro bundler:
+
+~~~bash
+npm run start --workspace=packages/pos-app
+~~~
+
+2. Native Android run is pending scaffold work:
+
+~~~bash
+# Not available yet (expected to fail until issue #8 is implemented)
+npm run android --workspace=packages/pos-app
+~~~
+
+**Notes:**
+- Metro bundler runs on http://localhost:8081 by default
+- This is useful for validating React Native/Metro wiring before full native app setup.
+
+### 6. Quick verification
 
 Open these URLs:
 
@@ -119,6 +145,9 @@ npm run test:e2e
 
 # POS unit tests
 npm run test --workspace=packages/pos-app
+
+# POS Metro bootstrap check
+npm run start --workspace=packages/pos-app  # Terminal 1: Metro bundler
 ~~~
 
 ### Lint (customer app)
@@ -173,6 +202,21 @@ npm run db:seed --workspace=packages/backend
 ### Port already in use (EADDRINUSE)
 
 Stop the process already using the port, or set a different PORT in packages/backend/.env.
+
+### POS app won't connect to backend
+
+- This will apply after issue #8 is completed and native Android app execution is available.
+- For now, validate Metro startup only.
+
+### Android build fails with "Could not find gradle.properties"
+
+Expected for now because native Android project scaffold is not yet present.
+
+### App crashes on startup
+
+- Verify backend is running and reachable
+- Check MongoDB/Prisma connection is working (backend logs will show errors)
+- Try clearing build cache: `cd packages/pos-app && npx react-native doctor`
 
 ## QR Workflow
 
