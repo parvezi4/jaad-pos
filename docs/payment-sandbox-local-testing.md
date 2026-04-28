@@ -161,3 +161,9 @@ https://<public-url>/api/payments/webhook
 - Order not moving to PAID:
   - Ensure external_id format remains order_<orderId>_<timestamp>.
   - Verify webhook payload status is exactly PAID.
+- "Currency and MID mismatched" on hosted card checkout:
+  - Your Xendit account MID (merchant ID / acquirer route) does not support the invoice currency.
+  - Open packages/backend/.env and set XENDIT_INVOICE_CURRENCY to the currency your Xendit test account supports.
+  - Common fix for Indonesia accounts: XENDIT_INVOICE_CURRENCY=IDR (already default).
+  - If the error persists with IDR, your test account card channel may need activation. Contact Xendit support with your invoice ID and the exact error text.
+  - In the meantime, use QRIS or Bank Transfer flows to validate the payment session end-to-end while card MID is being set up.

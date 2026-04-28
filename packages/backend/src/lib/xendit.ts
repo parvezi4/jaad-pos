@@ -1,4 +1,5 @@
 import { getXenditEnv } from './env';
+import type { XenditCurrency } from './env';
 
 interface CreateInvoiceInput {
   externalId: string;
@@ -8,7 +9,7 @@ interface CreateInvoiceInput {
     given_names?: string;
   };
   availablePaymentMethods?: string[];
-  currency?: 'IDR';
+  currency?: XenditCurrency;
   invoiceDuration?: number;
 }
 
@@ -40,7 +41,7 @@ export async function createXenditInvoice(input: CreateInvoiceInput): Promise<Xe
       amount: input.amount,
       description: input.description,
       customer: input.customer,
-      currency: input.currency || 'IDR',
+      currency: input.currency || getXenditEnv().XENDIT_INVOICE_CURRENCY || 'IDR',
       invoice_duration: input.invoiceDuration || 1800,
       available_payment_methods: input.availablePaymentMethods,
     }),
