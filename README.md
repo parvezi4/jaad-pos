@@ -52,6 +52,12 @@ Optional variable:
 
 - CORS_ORIGINS (comma-separated extra origins)
 
+Xendit variables (for payment sandbox):
+
+- XENDIT_SECRET_KEY
+- XENDIT_WEBHOOK_VERIFICATION_TOKEN
+- XENDIT_PUBLIC_KEY (optional for MVP backend flow, useful for future client-side card flow)
+
 Example:
 
 ~~~env
@@ -59,7 +65,12 @@ DATABASE_URL="postgresql://user:password@localhost:5432/jaad_pos?schema=public"
 PORT=4000
 CLIENT_URL="http://localhost:3000"
 CORS_ORIGINS="http://127.0.0.1:3000"
+XENDIT_SECRET_KEY="xnd_development_your_secret_key"
+XENDIT_WEBHOOK_VERIFICATION_TOKEN="your_webhook_verification_token"
+XENDIT_PUBLIC_KEY="xnd_public_development_your_public_key"
 ~~~
+
+For complete Xendit sandbox setup and local testing workflow, see docs/payment-sandbox-local-testing.md.
 
 ### 3. Initialize database
 

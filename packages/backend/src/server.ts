@@ -5,6 +5,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import cors from 'cors';
 import menuRouter from './routes/menu';
 import ordersRouter from './routes/orders';
+import paymentsRouter from './routes/payments';
 import { initSocket } from './lib/socket';
 
 const app = express();
@@ -100,6 +101,7 @@ app.get('/health', (_req, res) => {
 // Routes
 app.use('/api/menu', menuRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/payments', paymentsRouter);
 
 // 404 handler
 app.use((_req, res) => {

@@ -3,15 +3,23 @@
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCart } from '../../context/CartContext';
-import { submitOrder } from '../../lib/api';
+import { createPaymentSession, fetchOrderById, submitOrder } from '../../lib/api';
 import Link from 'next/link';
 
 function formatPrice(price: number): string {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
 }
 
-type PaymentMethod = 'QRIS' | 'OVO' | 'CASH';
+type PaymentMethod = 'QRIS' | 'CARD' | 'CASH';
 type CheckoutStep = 'review' | 'payment' | 'success';
+
+interface PaymentSession {
+  orderId: string;
+  checkoutUrl: string;
+  qrCodeUrl: string;
+  expiresAt: string;
+  paymentMethod: 'QRIS' | 'CARD';
+}
 
 function CheckoutPageContent() {
   const { items, totalAmount, clearCart } = useCart();
@@ -26,6 +34,7 @@ function CheckoutPageContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [paymentSession, setPaymentSession] = useState<PaymentSession | null>(null);
 
   if (!tableId || !restaurantId) {
     return (
@@ -36,22 +45,64 @@ function CheckoutPageContent() {
     );
   }
 
+  const orderPayload = {
+    tableId,
+    restaurantId,
+    customerName: customerName || undefined,
+    items: items.map((i) => ({
+      menuItemId: i.menuItemId,
+      quantity: i.quantity,
+      notes: i.notes,
+    })),
+  };
+
+  const handleCashOrder = async () => {
+    const order = await submitOrder({
+      ...orderPayload,
+      paymentMethod: 'CASH',
+    });
+    setOrderId(order.id);
+    clearCart();
+    setStep('success');
+  };
+
+  const handleCreatePaymentSession = async () => {
+    const session = await createPaymentSession({
+      ...orderPayload,
+      paymentMethod: paymentMethod as 'QRIS' | 'CARD',
+    });
+
+    setPaymentSession({
+      orderId: session.orderId,
+      checkoutUrl: session.checkoutUrl,
+      qrCodeUrl: session.qrCodeUrl,
+      expiresAt: session.expiresAt,
+      paymentMethod: session.paymentMethod,
+    });
+    setOrderId(session.orderId);
+  };
+
   const handlePaymentConfirm = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const order = await submitOrder({
-        tableId,
-        restaurantId,
-        customerName: customerName || undefined,
-        paymentMethod,
-        items: items.map((i) => ({
-          menuItemId: i.menuItemId,
-          quantity: i.quantity,
-          notes: i.notes,
-        })),
-      });
-      setOrderId(order.id);
+      if (paymentMethod === 'CASH') {
+        await handleCashOrder();
+        return;
+      }
+
+      if (!paymentSession) {
+        await handleCreatePaymentSession();
+        return;
+      }
+
+      const order = await fetchOrderById(paymentSession.orderId);
+      if (order.status !== 'PAID') {
+        setError('Payment is not completed yet. Please complete payment, then tap check again.');
+        return;
+      }
+
       clearCart();
       setStep('success');
     } catch (e) {
@@ -144,7 +195,7 @@ function CheckoutPageContent() {
           <>
             <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
               <h2 className="font-semibold text-gray-700 mb-3">Select Payment Method</h2>
-              {(['QRIS', 'OVO', 'CASH'] as PaymentMethod[]).map((method) => (
+              {(['QRIS', 'CARD', 'CASH'] as PaymentMethod[]).map((method) => (
                 <label key={method} className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 rounded-lg">
                   <input
                     type="radio"
@@ -158,20 +209,28 @@ function CheckoutPageContent() {
                   {method === 'QRIS' && (
                     <span className="text-xs text-gray-400 ml-auto">Scan QR Code</span>
                   )}
-                  {method === 'OVO' && (
-                    <span className="text-xs text-gray-400 ml-auto">Digital Wallet</span>
+                  {method === 'CARD' && (
+                    <span className="text-xs text-gray-400 ml-auto">Credit / Debit Card</span>
                   )}
                 </label>
               ))}
             </div>
 
-            {paymentMethod === 'QRIS' && (
+            {paymentMethod === 'QRIS' && paymentSession && (
               <div className="bg-white rounded-xl shadow-sm p-6 mb-4 text-center">
-                <p className="text-sm text-gray-500 mb-3">Scan to pay</p>
-                <div className="w-40 h-40 mx-auto bg-gray-200 rounded-lg flex items-center justify-center" data-testid="qris-placeholder">
-                  <span className="text-4xl">📲</span>
-                </div>
-                <p className="text-xs text-gray-400 mt-3">Simulated QRIS for demo</p>
+                <p className="text-sm text-gray-500 mb-3">Scan to pay with your banking/e-wallet app</p>
+                <img src={paymentSession.qrCodeUrl} alt="QRIS payment code" className="w-56 h-56 mx-auto rounded-lg border" data-testid="qris-code" />
+                <p className="text-xs text-gray-400 mt-3">Session expires at {new Date(paymentSession.expiresAt).toLocaleTimeString('id-ID')}</p>
+              </div>
+            )}
+
+            {paymentSession && (
+              <div className="bg-white rounded-xl shadow-sm p-4 mb-4 text-sm text-gray-600">
+                <p className="font-medium text-gray-800 mb-2">Payment session ready</p>
+                <p className="text-xs text-gray-500 mb-2">Order ID: <span className="font-mono">{paymentSession.orderId}</span></p>
+                <a href={paymentSession.checkoutUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline" data-testid="checkout-url-link">
+                  Open hosted payment page
+                </a>
               </div>
             )}
 
@@ -187,7 +246,13 @@ function CheckoutPageContent() {
               className="w-full bg-green-600 text-white py-4 rounded-xl font-semibold text-lg disabled:opacity-50"
               data-testid="confirm-payment-btn"
             >
-              {loading ? 'Processing...' : `Confirm Payment — ${formatPrice(totalAmount)}`}
+              {loading
+                ? 'Processing...'
+                : paymentMethod === 'CASH'
+                  ? `Confirm Cash Payment — ${formatPrice(totalAmount)}`
+                  : paymentSession
+                    ? 'Check Payment Status'
+                    : `Create Payment Session — ${formatPrice(totalAmount)}`}
             </button>
           </>
         )}
