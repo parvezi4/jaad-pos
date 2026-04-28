@@ -6,6 +6,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "jest --forceExit",
+    "test:xendit:webhook": "node scripts/mock-xendit-webhook.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "ts-node prisma/seed.ts"
