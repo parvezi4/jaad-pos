@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,17 +8,86 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useOrderSocket } from './hooks/useOrderSocket';
 import { OrderCard } from './components/OrderCard';
 import { generateEscPosTicket } from './utils/escpos';
 import { Order } from './types';
 
-const RESTAURANT_ID = process.env.RESTAURANT_ID || 'restaurant-1';
+function getDefaultApiUrl(): string {
+  return process.env.SOCKET_URL
+    ? process.env.SOCKET_URL
+    : Platform.OS === 'android'
+      ? 'http://10.0.2.2:4000'
+      : 'http://localhost:4000';
+}
+
+const RESTAURANT_SLUG = process.env.RESTAURANT_SLUG || 'jaad-cafe';
+const API_URL = process.env.API_URL || getDefaultApiUrl();
+
+interface RestaurantLookupResponse {
+  id: string;
+}
 
 export default function App() {
-  const { orders, connected, removeOrder } = useOrderSocket(RESTAURANT_ID);
+  const [restaurantId, setRestaurantId] = useState<string | null>(process.env.RESTAURANT_ID || null);
+  const [restaurantLoading, setRestaurantLoading] = useState(!process.env.RESTAURANT_ID);
+  const [restaurantError, setRestaurantError] = useState<string | null>(null);
+
+  const { orders, connected, removeOrder } = useOrderSocket(restaurantId);
   const [printing, setPrinting] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (restaurantId) {
+      return;
+    }
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    async function resolveRestaurantId() {
+      setRestaurantLoading(true);
+      setRestaurantError(null);
+
+      try {
+        const response = await fetch(
+          `${API_URL}/api/menu/slug/${encodeURIComponent(RESTAURANT_SLUG)}`,
+          { signal: controller.signal },
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const restaurant = (await response.json()) as RestaurantLookupResponse;
+        if (!restaurant.id) {
+          throw new Error('Missing restaurant id');
+        }
+
+        if (!cancelled) {
+          setRestaurantId(restaurant.id);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : 'Unknown error';
+          setRestaurantError(`Failed to resolve restaurant '${RESTAURANT_SLUG}': ${message}`);
+          console.log('[POS] Failed to resolve restaurant id:', message);
+        }
+      } finally {
+        if (!cancelled) {
+          setRestaurantLoading(false);
+        }
+      }
+    }
+
+    resolveRestaurantId();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [restaurantId]);
 
   const handlePrint = useCallback(
     async (order: Order) => {
@@ -64,7 +133,18 @@ export default function App() {
       </View>
 
       {/* Orders */}
-      {orders.length === 0 ? (
+      {restaurantLoading ? (
+        <View style={styles.emptyState}>
+          <ActivityIndicator size="large" color="#1e40af" />
+          <Text style={styles.emptyTitle}>Resolving Restaurant</Text>
+          <Text style={styles.emptySubtitle}>{`Looking up '${RESTAURANT_SLUG}'`}</Text>
+        </View>
+      ) : restaurantError ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.offlineHint}>{restaurantError}</Text>
+          <Text style={styles.emptySubtitle}>Set RESTAURANT_ID or RESTAURANT_SLUG correctly and restart POS app.</Text>
+        </View>
+      ) : orders.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>🕐</Text>
           <Text style={styles.emptyTitle}>Waiting for Orders</Text>

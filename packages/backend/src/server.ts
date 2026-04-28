@@ -15,6 +15,19 @@ const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4000;
 const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
+function isLocalDevOrigin(origin: string): boolean {
+  try {
+    const parsed = new URL(origin);
+    const host = parsed.hostname;
+    return (
+      parsed.protocol === 'http:' &&
+      (host === 'localhost' || host === '127.0.0.1' || host === '10.0.2.2')
+    );
+  } catch {
+    return false;
+  }
+}
+
 const allowedOrigins = Array.from(
   new Set([
     CLIENT_URL,
@@ -35,6 +48,13 @@ const corsOptions: cors.CorsOptions = {
     }
 
     if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    // In local development, allow localhost-style origins on any port
+    // so React Native/Metro and browser clients can connect without manual CORS edits.
+    if (process.env.NODE_ENV !== 'production' && isLocalDevOrigin(origin)) {
       callback(null, true);
       return;
     }

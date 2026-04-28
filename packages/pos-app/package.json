@@ -33,6 +33,9 @@
     "transform": {
       "^.+\\.(ts|tsx|js|jsx)$": "babel-jest"
     },
+    "moduleNameMapper": {
+      "^@jaad-pos/shared$": "<rootDir>/../shared/src/index.ts"
+    },
     "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
     "testMatch": ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"]
   }

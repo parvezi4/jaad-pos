@@ -34,9 +34,12 @@ prisma/dev.db-journal
 .expo/
 .expo-shared/
 
-# Android local machine and debug signing files
-packages/pos-app/android/local.properties
+# Android local/build artifacts
+packages/pos-app/android/.gradle/
+packages/pos-app/android/app/build/
+packages/pos-app/android/app/.cxx/
 packages/pos-app/android/app/debug.keystore
+packages/pos-app/android/local.properties
 
 # Cache and temporary files
 .cache/
