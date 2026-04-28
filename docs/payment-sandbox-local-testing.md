@@ -69,6 +69,48 @@ npm run test:xendit:webhook --workspace=packages/backend -- <orderId> PAID
 7. Return to checkout and click Check Payment Status.
 8. Expected result: order flow reaches success state.
 
+## 4.1 Sandbox test cards (Xendit)
+
+Official source:
+
+- https://docs.xendit.co/docs/cards-simulate-card-scenarios
+
+General rules:
+
+- Use Test Mode keys only.
+- Use any CVV and future expiry date for these cards (except AMEX uses 4-digit CVN).
+
+Common card scenarios you can use:
+
+| Card number | Brand | Scenario |
+| --- | --- | --- |
+| 4000000000002503 | VISA | 3DS challenge, success if OTP is correct |
+| 4000000000001000 | VISA | 3DS frictionless, success |
+| 5200000000002151 | MASTERCARD | 3DS challenge, success if OTP is correct |
+| 5200000000001005 | MASTERCARD | 3DS frictionless, success |
+| 378282246310005 | AMEX | 3DS frictionless, success (4-digit CVN) |
+| 340000000002534 | AMEX | 3DS challenge (4-digit CVN) |
+
+Failed charge simulation by amount (non-Vietnam):
+
+| Amount | Simulated code |
+| --- | --- |
+| 10051 | EXPIRED_CARD |
+| 10054 | INSUFFICIENT_BALANCE |
+| 10058 | INVALID_CVV |
+| 10059 | DECLINED_BY_ISSUER |
+
+3DS challenge result simulation (ACS page options):
+
+- AUTHENTICATED => SUCCESS
+- UNAUTHENTICATED => FAILED
+- CANCELLED_AUTHENTICATION => FAILED
+- AUTHENTICATION_REJECTED => FAILED
+
+Notes:
+
+- Xendit may update available test cards by country/connection; always verify against the official page above.
+
 ## 5. Webhook security test
 
 Send invalid token callback and verify rejection:
