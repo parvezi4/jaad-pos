@@ -70,20 +70,7 @@ XENDIT_WEBHOOK_VERIFICATION_TOKEN="your_webhook_verification_token"
 XENDIT_PUBLIC_KEY="xnd_public_development_your_public_key"
 ~~~
 
-### Xendit sandbox quick test (local)
-
-After creating a payment session in checkout, copy the Order ID shown in the payment panel, then simulate webhook callback:
-
-~~~bash
-npm run test:xendit:webhook --workspace=packages/backend -- <orderId> PAID
-~~~
-
-Notes:
-
-- This sends a signed callback to POST /api/payments/webhook using XENDIT_WEBHOOK_VERIFICATION_TOKEN from packages/backend/.env.
-- If status is PAID, backend updates the order status to PAID.
-- packages/backend/.env is gitignored by root .gitignore and should never be committed.
-- Full local sandbox guide: docs/payment-sandbox-local-testing.md
+For complete Xendit sandbox setup and local testing workflow, see docs/payment-sandbox-local-testing.md.
 
 ### 3. Initialize database
 
